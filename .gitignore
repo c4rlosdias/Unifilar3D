@@ -60,6 +60,5 @@ Thumbs.db
 
 # Project-specific
 output/
-input/drawings/cache/
 input/drawings/
 input/*.ifc

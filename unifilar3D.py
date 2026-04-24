@@ -92,7 +92,7 @@ def add_catalog_representation(type_target : ifcopenshell.entity_instance, model
     """
     sub_context = representation.get_context(model, 'Model', 'Body', 'MODEL_VIEW')  
     if sub_context is None:
-        sub_context = context.add_context(model, context_type='Model', context_identifier='Body', context_of_items='Body')
+        sub_context = context.add_context(model, context_type='Model', context_identifier='Body')
     catalog = ifcopenshell.open(CATALOG_INPUT)
     type_catalog = get_type_catalog(type_target.Name, catalog)
     
@@ -145,7 +145,7 @@ def create_pipe(model : ifcopenshell.file, tramo : ifcopenshell.entity_instance,
     """
     sub_context = representation.get_context(model, 'Model', 'Body', 'MODEL_VIEW')  
     if sub_context is None:
-        sub_context = context.add_context(model, context_type='Model', context_identifier='Body', context_of_items='Body')
+        sub_context = context.add_context(model, context_type='Model', context_identifier='Body')
     
     # create a new representation for the tramo
     element_type=element.get_type(tramo)
@@ -302,7 +302,7 @@ def main():
         x_start = 0  # X at the start of the current tramo
         y = 0
 
-        for tramo in element.get_contained(building):
+        for tramo in element.get_components(building):
             logging.info(f'Processing Tramo {tramo.id()} - {tramo.Name}...')
             components = element.get_components(tramo)
             n = len(components)
@@ -328,7 +328,7 @@ def main():
                 y = -dist if component_type.ElementType == 'PipePullingHeadType' else 0
 
                 matrix = np.eye(4)
-                if i > n / 2:
+                if i+1 > n / 2:
                     matrix = placement.rotation(180, "Z") @ matrix
                     x += tam
 
