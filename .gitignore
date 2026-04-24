@@ -6,6 +6,7 @@ __pycache__/
 *.pyd
 *.so
 *.log
+*.ifc
 
 # Virtual environments
 venv/
@@ -60,3 +61,5 @@ Thumbs.db
 # Project-specific
 output/
 input/drawings/cache/
+input/drawings/
+input/*.ifc
