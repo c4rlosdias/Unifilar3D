@@ -95,45 +95,40 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
     if len(target_material) > 0:
         logging.debug(f'{material_type.Name} : existing material found and assigned successfully! ({list(target_material)[0]})')
         return list(target_material)[0]
+
+    logging.warning(f'{material_type.Name} : material not found in model, creating new material!')
+
+    if material_type.is_a('IfcMaterial'):
+        logging.debug(f'{material_type.Name} : material type is IfcMaterial, cloning material and style from catalog...')
+        material_entity = material_type
+    elif material_type.is_a('IfcMaterialProfileSet'):
+        logging.debug(f'{material_type.Name} : material type is IfcMaterialProfileSet, cloning material, style and profile from catalog...')
+        material_entity = material_type.MaterialProfiles[0].Material
     else:
-        logging.warning(f'{material_type.Name} : material not found in model, creating new material!')
-        
-        if material_type.is_a('IfcMaterial'):
-            logging.debug(f'{material_type.Name} : material type is IfcMaterial, cloning material and style from catalog...')
-            new_material = clone_entity([material_type], model, sub_context)[0]        
-        
-            if style_type is not None:
-                new_style = clone_entity([style_type], model, sub_context)[0]
-                if new_material.is_a('IfcMaterial'):
-                    style.assign_material_style(model, material=new_material, style=new_style, context=sub_context)
-                else:
-                    style.assign_material_style(model, material=new_material.MaterialProfiles[0].Material, style=new_style, context=sub_context)
-            else:
-                logging.error(f'Material {material_type.Name} : material style not found in catalog!')
-            return new_material
-        
-        elif material_type.is_a('IfcMaterialProfileSet'):
-            logging.debug(f'{material_type.Name} : material type is IfcMaterialProfileSet, cloning material, style and profile from catalog...')
-            new_material = clone_entity([material_type.MaterialProfiles[0].Material], model, sub_context)[0]        
-        
-            if style_type is not None:
-                new_style = clone_entity([style_type], model, sub_context)[0]
-                style.assign_material_style(model, material=new_material, style=new_style, context=sub_context)
-            else:
-                logging.error(f'Material {material_type.Name} : material style not found in catalog!')
+        logging.error(f'{material_type.Name} is not IfcMaterial neither IfcMaterialProfileSet type, cannot clone material!')
+        return None
 
-            if profile_type is not None:
-                new_profile = clone_entity([profile_type], model, sub_context)[0]
-                material_set = material.add_material_set(model, name=f'{new_material.Name}', set_type='IfcMaterialProfileSet')
-                material.add_profile(model, profile_set=material_set, material=new_material, profile=new_profile)
-            else:
-                logging.error(f'Material {material_type.Name} : material profile not found in catalog!')
+    new_material = clone_entity([material_entity], model, sub_context)[0]
 
-            logging.debug(f'{material_type.Name} of type {material_type.is_a()} : new material created and assigned successfully! ({material_set})')
-            return material_set
-        else:
-            logging.error(f'{material_type.Name} is not IfcMaterial neither IfcMaterialProfileSet type, cannot clone material!')
-            return None
+    if style_type is not None:
+        new_style = clone_entity([style_type], model, sub_context)[0]
+        style.assign_material_style(model, material=new_material, style=new_style, context=sub_context)
+    else:
+        logging.error(f'Material {material_type.Name} : material style not found in catalog!')
+
+    if material_type.is_a('IfcMaterial'):
+        return new_material
+
+    # IfcMaterialProfileSet: create profile set
+    if profile_type is not None:
+        new_profile = clone_entity([profile_type], model, sub_context)[0]
+        material_set = material.add_material_set(model, name=f'{new_material.Name}', set_type='IfcMaterialProfileSet')
+        material.add_profile(model, profile_set=material_set, material=new_material, profile=new_profile)
+        logging.debug(f'{material_type.Name} of type {material_type.is_a()} : new material created and assigned successfully! ({material_set})')
+        return material_set
+    else:
+        logging.error(f'Material {material_type.Name} : material profile not found in catalog!')
+        return None
         
     
 def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file) -> list:
@@ -179,7 +174,6 @@ def create_pipe(model : ifcopenshell.file, tramo : ifcopenshell.entity_instance,
 
     if element_type is not None:       
        material_set = element.get_material(element_type)
-       print(f'{element_type.Name} - {material_set}')
        if material_set is not None and material_set.is_a('IfcMaterialProfileSet'):            
             profile = material_set.MaterialProfiles[0].Profile 
             matrix = np.eye(4)
@@ -329,8 +323,9 @@ def main():
         x = 0        # running X position across all tramos in this building
         x_start = 0  # X at the start of the current tramo
         y = 0
-
-        for tramo in element.get_components(building):
+        ###########################################################################################################
+        ###########################################################################################################
+        for tramo in element.get_contained(building): # or get_components depending on how the model is structured
             logging.info(f'Processing Tramo {tramo.id()} - {tramo.Name}...')
             components = element.get_components(tramo)
             n = len(components)
