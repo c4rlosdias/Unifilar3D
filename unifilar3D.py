@@ -368,8 +368,8 @@ def main():
             create_pipe(model, tramo, (x_start + first_tam, y), depth)
 
     Path(model_output).parent.mkdir(parents=True, exist_ok=True)
-    model.write(model_output)
-    print(f'Model written to "{model_output}" successfully!')
+    model.write('.'.join(model_input.split('.')[:-1]) + '_clone.ifc')
+    print(f'Model written to "{'.'.join(model_input.split('.')[:-1]) + '_clone.ifc'}" successfully!')
 
 
 if __name__ == "__main__":
