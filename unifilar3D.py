@@ -4,8 +4,11 @@ from ifcopenshell.util import representation, element, selector, placement, shap
 from ifcopenshell.api import type, geometry, context, style, material
 import numpy as np
 import logging
+import io
+import os
+import tempfile
 from pathlib import Path
-from tqdm import tqdm
+import streamlit as st
 
 DEFAULT_MODEL_INPUT   = "./input/model.ifc"
 DEFAULT_CATALOG_INPUT = "./input/catalog.ifc"
@@ -131,14 +134,14 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
         return None
         
     
-def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file) -> list:
+def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file, catalog_input : str) -> list:
     """
     Clone the representation map of the given type target.
     """
     sub_context = representation.get_context(model, 'Model', 'Body', 'MODEL_VIEW')  
     if sub_context is None:
         sub_context = context.add_context(model, context_type='Model', context_identifier='Body')
-    catalog = ifcopenshell.open(CATALOG_INPUT)
+    catalog = ifcopenshell.open(catalog_input)
 
     type_catalog = get_type_catalog(type_target.Name, catalog)
     
@@ -195,113 +198,23 @@ def create_pipe(model : ifcopenshell.file, tramo : ifcopenshell.entity_instance,
         return None
 
 
-def prompt(label: str, default: str) -> str:
-    value = input(f"  {label} [{default}]: ").strip()
-    return value if value else default
+def run_processing(model_path, catalog_path, dist, dist_tramos, log_buffer, progress_bar, status_text):
+    """Run the full IFC unifilar processing pipeline."""
 
-
-def print_header():
-    print(r"""
-  ██╗   ██╗███╗   ██╗██╗███████╗██╗██╗      █████╗ ██████╗ ██████╗ ██████╗ 
-  ██║   ██║████╗  ██║██║██╔════╝██║██║     ██╔══██╗██╔══██╗╚════██╗██╔══██╗
-  ██║   ██║██╔██╗ ██║██║█████╗  ██║██║     ███████║██████╔╝ █████╔╝██║  ██║
-  ██║   ██║██║╚██╗██║██║██╔══╝  ██║██║     ██╔══██║██╔══██╗ ╚═══██╗██║  ██║
-  ╚██████╔╝██║ ╚████║██║██║     ██║███████╗██║  ██║██║  ██║██████╔╝██████╔╝
-   ╚═════╝ ╚═╝  ╚═══╝╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝╚═════╝ 
-              IFC Unifilar Representation Generator
-    """)
-
-
-def print_config(model_input, catalog_input, model_output, log_file, verbose, dist, dist_tramos):
-    print("\n  Current configuration:")
-    print(f"    [1] Input model       : {model_input}")
-    print(f"    [2] IFC catalog       : {catalog_input}")
-    print(f"    [3] Output model      : {model_output}")
-    print(f"    [4] Log file          : {log_file}")
-    print(f"    [5] Verbose           : {'yes' if verbose else 'no'}")
-    print(f"    [6] Component gap (dist)        : {dist} m")
-    print(f"    [7] Tramo gap (dist_tramos)      : {dist_tramos} m")
-
-
-def main():
-    model_input   = DEFAULT_MODEL_INPUT
-    catalog_input = DEFAULT_CATALOG_INPUT
-    model_output  = DEFAULT_MODEL_OUTPUT
-    log_file      = DEFAULT_LOG_FILE
-    verbose       = False
-    dist          = DEFAULT_DIST
-    dist_tramos   = DEFAULT_DIST_TRAMOS
-
-    while True:
-        print_header()
-        print_config(model_input, catalog_input, model_output, log_file, verbose, dist, dist_tramos)
-        print()
-        print("  [E] Execute")
-        print("  [Q] Quit")
-        print()
-
-        choice = input("  Option: ").strip().upper()
-
-        if choice == "Q":
-            print("\n  Exiting.\n")
-            break
-        elif choice == "E":
-            print()
-            break
-        elif choice == "1":
-            model_input   = prompt("Input model",  model_input)
-        elif choice == "2":
-            catalog_input = prompt("IFC catalog",  catalog_input)
-        elif choice == "3":
-            model_output  = prompt("Output model", model_output)
-        elif choice == "4":
-            log_file      = prompt("Log file",     log_file)
-        elif choice == "5":
-            verbose = not verbose
-            print(f"  Verbose: {'enabled' if verbose else 'disabled'}")
-        elif choice == "6":
-            value = prompt("Component gap (dist) [m]", str(dist))
-            try:
-                dist = float(value)
-            except ValueError:
-                print("  Invalid value. Please enter a decimal number.")
-        elif choice == "7":
-            value = prompt("Tramo gap (dist_tramos) [m]", str(dist_tramos))
-            try:
-                dist_tramos = float(value)
-            except ValueError:
-                print("  Invalid value. Please enter a decimal number.")
-        else:
-            print("  Invalid option.\n")
-        print()
-
-    if choice == "Q":
-        return
-
-    handlers = [logging.FileHandler(log_file, encoding="utf-8")]
-    if verbose:
-        handlers.append(logging.StreamHandler())
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s %(levelname)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=handlers,
-    )
-
-    # make catalog path available to add_catalog_representation
-    global CATALOG_INPUT
-    CATALOG_INPUT = catalog_input
-
-    model = ifcopenshell.open(model_input)
-    print(f'Model "{model_input}" opened successfully!')
+    model = ifcopenshell.open(model_path)
     settings = geom.settings()
 
-    # get types' representation map from catalog and assign to the model
+    # --- Types ---
     types = model.by_type('IfcPipeFittingType') + model.by_type('IfcPipeSegmentType')
-    logging.info('Iniciating processing of types representation map from catalog...')
-    for type_target in tqdm(types, desc='Processing Types    ', unit='type', total=len(types)):
+    total_types = len(types)
+    logging.info('Initiating processing of types representation map from catalog...')
+
+    for i, type_target in enumerate(types):
+        status_text.text(f"Processing type {i + 1}/{total_types}: {type_target.Name}")
+        progress_bar.progress((i + 1) / total_types if total_types else 1.0, text="Processing types...")
         logging.debug(f'Processing Type {type_target.id()} - {type_target.Name}...')
-        if add_catalog_representation(type_target, model):
+
+        if add_catalog_representation(type_target, model, catalog_path):
             instances = element.get_types(type_target)
             for instance in instances:
                 geometry.edit_object_placement(model, product=instance)
@@ -310,22 +223,24 @@ def main():
         else:
             logging.debug(f'Type {type_target.Name} not found in catalog!')
 
-    # create tramos
+    # --- Buildings / Tramos ---
     buildings = model.by_type('IfcBuilding')
-    for building in tqdm(buildings, desc='Processing Buildings', unit='building', total=len(buildings)):
+    total_buildings = len(buildings)
+
+    for b_idx, building in enumerate(buildings):
+        status_text.text(f"Processing building {b_idx + 1}/{total_buildings}: {building.Name}")
+        progress_bar.progress((b_idx + 1) / total_buildings if total_buildings else 1.0, text="Processing buildings...")
+
         if building.ObjectType != 'SubseaPipeline':
             continue
 
-        # dist and dist_tramos are configured via the interactive menu
-
         logging.info(f'Processing Building {building.id()} - {building.Name}...')
 
-        x = 0        # running X position across all tramos in this building
-        x_start = 0  # X at the start of the current tramo
+        x = 0
+        x_start = 0
         y = 0
-        ###########################################################################################################
-        ###########################################################################################################
-        for tramo in element.get_contained(building): # or get_components depending on how the model is structured
+
+        for tramo in element.get_contained(building):
             logging.info(f'Processing Tramo {tramo.id()} - {tramo.Name}...')
             components = element.get_components(tramo)
             n = len(components)
@@ -351,7 +266,7 @@ def main():
                 y = -dist if component_type.ElementType == 'PipePullingHeadType' else 0
 
                 matrix = np.eye(4)
-                if i+1 > n / 2:
+                if i + 1 > n / 2:
                     matrix = placement.rotation(180, "Z") @ matrix
                     x += tam
 
@@ -362,19 +277,112 @@ def main():
                 depth = x - x_start - 2 * tam
                 x += tam + dist
 
-            # adjust x back after the last component
-            x += dist_tramos - (tam + dist)  
-            
+            x += dist_tramos - (tam + dist)
             create_pipe(model, tramo, (x_start + first_tam, y), depth)
 
-    Path(model_output).parent.mkdir(parents=True, exist_ok=True)
-    model.write('.'.join(model_input.split('.')[:-1]) + '_clone.ifc')
-    print(f'Model written to "{'.'.join(model_input.split('.')[:-1]) + '_clone.ifc'}" successfully!')
+    # Write output to a bytes buffer via a temp file
+    with tempfile.NamedTemporaryFile(suffix=".ifc", delete=False) as tmp_out:
+        tmp_out_path = tmp_out.name
+
+    try:
+        model.write(tmp_out_path)
+        with open(tmp_out_path, "rb") as f:
+            return f.read()
+    finally:
+        try:
+            os.remove(tmp_out_path)
+        except OSError:
+            pass
+
+
+def main():
+    st.set_page_config(
+        page_title="Unifilar3D",
+        page_icon="🏗️",
+        layout="wide",
+    )
+
+    st.title("Unifilar3D — IFC Unifilar Representation Generator")
+
+    # ── Sidebar: configuration ──────────────────────────────────────────────
+    with st.sidebar:
+        st.header("Configuration")
+
+        model_file   = st.file_uploader("Input Model (.ifc)", type=["ifc"], key="model_file")
+        catalog_file = st.file_uploader("IFC Catalog (.ifc)", type=["ifc"], key="catalog_file")
+
+        st.divider()
+
+        output_name  = st.text_input("Output filename", "model_clone.ifc")
+        dist         = st.number_input("Component gap — dist (m)", value=DEFAULT_DIST,        min_value=0.0, step=0.05, format="%.3f")
+        dist_tramos  = st.number_input("Tramo gap — dist_tramos (m)", value=DEFAULT_DIST_TRAMOS, min_value=0.0, step=0.01, format="%.3f")
+        verbose      = st.checkbox("Verbose logging")
+
+        st.divider()
+        execute = st.button("▶ Execute", type="primary", use_container_width=True)
+
+    # ── Main area ───────────────────────────────────────────────────────────
+    if not execute:
+        st.info("Upload the input model and catalog in the sidebar, adjust parameters, then click **Execute**.")
+        return
+
+    if model_file is None or catalog_file is None:
+        st.error("Please upload both the **Input Model** and the **IFC Catalog** before executing.")
+        return
+
+    # Save uploaded files to a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model_path   = os.path.join(tmpdir, model_file.name)
+        catalog_path = os.path.join(tmpdir, catalog_file.name)
+
+        with open(model_path, "wb") as f:
+            f.write(model_file.read())
+        with open(catalog_path, "wb") as f:
+            f.write(catalog_file.read())
+
+        # Configure logging to capture into a string buffer
+        log_buffer = io.StringIO()
+        log_handlers = [logging.StreamHandler(log_buffer)]
+        logging.basicConfig(
+            level=logging.DEBUG if verbose else logging.INFO,
+            format="%(asctime)s %(levelname)s %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            handlers=log_handlers,
+            force=True,
+        )
+
+        progress_bar = st.progress(0, text="Starting...")
+        status_text  = st.empty()
+        output_bytes = None
+
+        try:
+            with st.spinner("Processing IFC model…"):
+                output_bytes = run_processing(
+                    model_path, catalog_path,
+                    dist, dist_tramos,
+                    log_buffer, progress_bar, status_text,
+                )
+            progress_bar.progress(1.0, text="Done!")
+            status_text.text("Processing complete.")
+            st.success("Model processed successfully!")
+        except Exception as exc:
+            st.error(f"Processing failed: {exc}")
+            logging.exception("Unhandled exception during processing")
+
+        # Log output
+        with st.expander("Log output", expanded=verbose):
+            st.text(log_buffer.getvalue() or "(no log output)")
+
+        # Download button
+        if output_bytes is not None:
+            st.download_button(
+                label="⬇ Download output IFC",
+                data=output_bytes,
+                file_name=output_name,
+                mime="application/octet-stream",
+            )
 
 
 if __name__ == "__main__":
     main()
 
-
-
-    
