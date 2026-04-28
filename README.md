@@ -1,17 +1,20 @@
 # Unifilar3D
 
-**Unifilar3D** is a Python tool that generates a 3D unifilar (single-line diagram) representation of subsea pipeline IFC models.
+**Unifilar3D** is a web application (Streamlit) that generates a 3D unifilar (single-line diagram) representation of subsea pipeline IFC models.
 
-It reads a source IFC model containing pipeline assemblies (`IfcBuilding` of type `SubseaPipeline`) and an IFC catalog of component types. For each pipeline, it fetches the 3D geometry representations of fitting and segment types from the catalog, assigns the correct materials and profiles, and lays out the components linearly along the X axis — spaced according to configurable gap parameters — producing a clean, linearized output IFC model ready for visualization or further processing.
+It reads a source IFC model containing pipeline assemblies (`IfcBuilding` of type `SubseaPipeline`) and an IFC catalog of component types. For each pipeline, it fetches the 3D geometry representations of fitting and segment types from the catalog, assigns the correct materials and profiles, and lays out the components linearly along the X axis — spaced according to configurable gap parameters — producing a clean, linearized output IFC model ready for download, visualization, or further processing.
 
 ## Features
 
+- Browser-based interface — no command line required
+- Upload IFC model and catalog directly through the UI
 - Matches `IfcPipeFittingType` and `IfcPipeSegmentType` against a reusable IFC catalog
 - Clones geometry, material, and profile data from the catalog into the target model
 - Generates pipe segment (tramo) geometry using material profile sets
 - Configurable component gap (`dist`) and tramo gap (`dist_tramos`)
-- Interactive CLI menu with full configuration control
-- Detailed logging to file, with optional verbose console output
+- Real-time progress bar and status updates during processing
+- Expandable log output panel with optional verbose mode
+- One-click download of the generated IFC model
 
 ## Requirements
 
@@ -21,38 +24,36 @@ Install dependencies with:
 pip install -r requirements.txt
 ```
 
-Main dependencies: `ifcopenshell`, `numpy`, `tqdm`
+Main dependencies: `streamlit`, `ifcopenshell`, `numpy`
 
 ## Usage
 
 ```bash
-python unifilar3D.py
+streamlit run unifilar3D.py
 ```
 
-An interactive menu will appear allowing you to configure all parameters before execution:
+The app will open in your default browser. Use the sidebar to:
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `[1]` | Input IFC model path | `./input/model.ifc` |
-| `[2]` | IFC catalog path | `./input/catalog.ifc` |
-| `[3]` | Output IFC model path | `./output/model_clone.ifc` |
-| `[4]` | Log file path | `unifilar3D.log` |
-| `[5]` | Verbose console output | `no` |
-| `[6]` | Component gap — `dist` (m) | `0.5` |
-| `[7]` | Tramo gap — `dist_tramos` (m) | `0.1` |
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| Input Model | Upload the source pipeline `.ifc` file | — |
+| IFC Catalog | Upload the component type catalog `.ifc` file | — |
+| Output filename | Name for the generated IFC file | `model_clone.ifc` |
+| Component gap — `dist` (m) | Spacing between components | `0.5` |
+| Tramo gap — `dist_tramos` (m) | Spacing between pipe segments | `0.1` |
+| Verbose logging | Show debug-level log output | off |
 
-Press `[E]` to execute or `[Q]` to quit.
+Click **▶ Execute** to process the model, then download the result with the **⬇ Download output IFC** button.
 
 ## Project Structure
 
 ```
 Unifilar3D/
-├── unifilar3D.py       # Main script
+├── unifilar3D.py       # Streamlit web application
 ├── requirements.txt    # Python dependencies
 ├── input/
-│   ├── model.ifc       # Source pipeline IFC model
-│   ├── catalog.ifc     # IFC component type catalog
+│   ├── model.ifc       # Example source pipeline IFC model
+│   ├── catalog.ifc     # Example IFC component type catalog
 │   └── drawings/       # Drawing assets (CSS, shading styles)
-└── output/
-    └── model_clone.ifc # Generated unifilar IFC model
+└── output/             # Local output directory (CLI legacy)
 ```

@@ -1,10 +1,8 @@
 import ifcopenshell
 from ifcopenshell import geom
 from ifcopenshell.util import representation, element, selector, placement, shape
-from ifcopenshell.api import type, geometry, context, style, material
+from ifcopenshell.api import type, geometry, context, style, material, spatial
 import numpy as np
-import logging
-import io
 import os
 import tempfile
 from pathlib import Path
@@ -50,13 +48,13 @@ def clone_entity(elements : list, model : ifcopenshell.file, sub_context : ifcop
     else:
         return None
 
-def get_type_catalog(type_name : str, catalog : ifcopenshell.file) -> ifcopenshell.entity_instance:
+def get_type_catalog(type_attribute : str, attribute : str, catalog : ifcopenshell.file) -> ifcopenshell.entity_instance:
     """
-    Get the type from the catalog with the given name.
+    Get the type from the catalog with the given attribute value.
     """
     types = catalog.by_type('IfcTypeProduct')
     for type in types:
-        if type.Name == type_name:
+        if getattr(type, attribute, None) == type_attribute:
             return type
     return None
 
@@ -96,19 +94,19 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
     # verifies if the material already exists in the model, if it does, assign it to the type target, if it doesn't, clone the material and assign it to the type target
     target_material = selector.filter_elements(model, f"{material_type.is_a()}, Name=/{material_type.Name}/")
     if len(target_material) > 0:
-        logging.debug(f'{material_type.Name} : existing material found and assigned successfully! ({list(target_material)[0]})')
+        st.write(f'{material_type.Name} : existing material found and assigned successfully! ({list(target_material)[0]})')
         return list(target_material)[0]
 
-    logging.warning(f'{material_type.Name} : material not found in model, creating new material!')
+    st.warning(f'{material_type.Name} : material not found in model, creating new material!')
 
     if material_type.is_a('IfcMaterial'):
-        logging.debug(f'{material_type.Name} : material type is IfcMaterial, cloning material and style from catalog...')
+        st.write(f'{material_type.Name} : material type is IfcMaterial, cloning material and style from catalog...')
         material_entity = material_type
     elif material_type.is_a('IfcMaterialProfileSet'):
-        logging.debug(f'{material_type.Name} : material type is IfcMaterialProfileSet, cloning material, style and profile from catalog...')
+        st.write(f'{material_type.Name} : material type is IfcMaterialProfileSet, cloning material, style and profile from catalog...')
         material_entity = material_type.MaterialProfiles[0].Material
     else:
-        logging.error(f'{material_type.Name} is not IfcMaterial neither IfcMaterialProfileSet type, cannot clone material!')
+        st.error(f'{material_type.Name} is not IfcMaterial neither IfcMaterialProfileSet type, cannot clone material!')
         return None
 
     new_material = clone_entity([material_entity], model, sub_context)[0]
@@ -117,7 +115,7 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
         new_style = clone_entity([style_type], model, sub_context)[0]
         style.assign_material_style(model, material=new_material, style=new_style, context=sub_context)
     else:
-        logging.error(f'Material {material_type.Name} : material style not found in catalog!')
+        st.error(f'Material {material_type.Name} : material style not found in catalog!')
 
     if material_type.is_a('IfcMaterial'):
         return new_material
@@ -127,14 +125,14 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
         new_profile = clone_entity([profile_type], model, sub_context)[0]
         material_set = material.add_material_set(model, name=f'{new_material.Name}', set_type='IfcMaterialProfileSet')
         material.add_profile(model, profile_set=material_set, material=new_material, profile=new_profile)
-        logging.debug(f'{material_type.Name} of type {material_type.is_a()} : new material created and assigned successfully! ({material_set})')
+        st.write(f'{material_type.Name} of type {material_type.is_a()} : new material created and assigned successfully! ({material_set})')
         return material_set
     else:
-        logging.error(f'Material {material_type.Name} : material profile not found in catalog!')
+        st.error(f'Material {material_type.Name} : material profile not found in catalog!')
         return None
         
     
-def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file, catalog_input : str) -> list:
+def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file, catalog_input : str, attribute : str) -> list:
     """
     Clone the representation map of the given type target.
     """
@@ -143,9 +141,10 @@ def add_catalog_representation(type_target : ifcopenshell.entity_instance, model
         sub_context = context.add_context(model, context_type='Model', context_identifier='Body')
     catalog = ifcopenshell.open(catalog_input)
 
-    type_catalog = get_type_catalog(type_target.Name, catalog)
+    type_catalog = get_type_catalog(getattr(type_target, attribute, None), attribute, catalog)
     
     if type_catalog is None:
+        st.warning(f'{type_target.Name} : type not found in catalog!')
         return False
     
     catalog_representation_map = type_catalog.RepresentationMaps
@@ -160,7 +159,7 @@ def add_catalog_representation(type_target : ifcopenshell.entity_instance, model
         material.assign_material(model, products=[type_target], type=new_material.is_a(), material=new_material)
             
     else:
-        logging.warning(f'{type_target.Name} - {type_material.Name} : material not found in catalog!')
+        st.warning(f'{type_target.Name} - material not found in catalog!')
         
     return True
 
@@ -198,32 +197,53 @@ def create_pipe(model : ifcopenshell.file, tramo : ifcopenshell.entity_instance,
         return None
 
 
-def run_processing(model_path, catalog_path, dist, dist_tramos, log_buffer, progress_bar, status_text):
+def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progress_bar, status_text):
     """Run the full IFC unifilar processing pipeline."""
 
     model = ifcopenshell.open(model_path)
     settings = geom.settings()
 
+    # --- Initial placements for ports ---
+    st.markdown(':green[Initiating processing of ports initial placements...]')
+    ports = model.by_type('IfcDistributionPort')
+    for port in ports:
+        st.write(f'Processing Port {port.id()} - {port.Name}...')
+        if port.ObjectPlacement is None:
+            geometry.edit_object_placement(model, product=port)
+    
     # --- Types ---
+    st.markdown(':green[Initiating processing of types representation map from catalog...]')
     types = model.by_type('IfcPipeFittingType') + model.by_type('IfcPipeSegmentType')
     total_types = len(types)
-    logging.info('Initiating processing of types representation map from catalog...')
+    st.write('Initiating processing of types representation map from catalog...')
 
+    # Iterate over types and add catalog representation map, then update placements of related instances
     for i, type_target in enumerate(types):
         status_text.text(f"Processing type {i + 1}/{total_types}: {type_target.Name}")
         progress_bar.progress((i + 1) / total_types if total_types else 1.0, text="Processing types...")
-        logging.debug(f'Processing Type {type_target.id()} - {type_target.Name}...')
+        st.write(f'Processing Type #{type_target.id()} - {type_target.Name}...')
 
-        if add_catalog_representation(type_target, model, catalog_path):
+        if add_catalog_representation(type_target, model, catalog_path, attribute):
             instances = element.get_types(type_target)
             for instance in instances:
                 geometry.edit_object_placement(model, product=instance)
             type.unassign_type(model, related_objects=list(instances))
             type.assign_type(model, related_objects=list(instances), relating_type=type_target)
         else:
-            logging.debug(f'Type {type_target.Name} not found in catalog!')
+            st.write(f'Type {type_target.Name} not found in catalog!')
 
+    # --- Aggregations ---
+    st.markdown(':green[Initiating processing of aggregate initial placements...]')
+    subsea_pipeline = list(selector.filter_elements(model, "IfcBuilding, ObjectType=SubseaPipeline"))[0]
+    pipes = selector.filter_elements(model, "IfcPipeSegment")
+    for pipe in pipes:
+        if pipe not in element.get_contained(subsea_pipeline):
+            st.write(f'Assigning #{pipe.id()} - {pipe.Name} to SubseaPipeline...')
+            spatial.assign_container(model, products=[pipe], relating_structure=subsea_pipeline)
+
+    
     # --- Buildings / Tramos ---
+    st.markdown(':green[Initiating processing tramos of initial placements...]')
     buildings = model.by_type('IfcBuilding')
     total_buildings = len(buildings)
 
@@ -234,30 +254,36 @@ def run_processing(model_path, catalog_path, dist, dist_tramos, log_buffer, prog
         if building.ObjectType != 'SubseaPipeline':
             continue
 
-        logging.info(f'Processing Building {building.id()} - {building.Name}...')
+        st.write(f'Processing Building {building.id()} - {building.Name}...')
 
         x = 0
         x_start = 0
         y = 0
 
         for tramo in element.get_contained(building):
-            logging.info(f'Processing Tramo {tramo.id()} - {tramo.Name}...')
+            st.write(f'Processing Tramo #{tramo.id()} - {tramo.Name}...')
             components = element.get_components(tramo)
             n = len(components)
             x_start = x
             first_tam = 0
             depth = 0
-
-            for i, component in enumerate(components):
+            st.write(f'Number of components in Tramo #{tramo.id()} - {tramo.Name}: {n}')
+            tam = 0
+            if len(components) == 0:
+                st.warning(f'Tramo {tramo.id()} - {tramo.Name} has no components, defaulting to tramo gap {dist_tramos} m')
+                x += dist_tramos
+                continue
+            for i, component in enumerate(components):                
+                st.write(f'Processing Component #{component.id()} - {component.Name}...')
                 component_type = element.get_type(component)
 
                 if component.Representation is not None:
                     component_shape = geom.create_shape(settings, component)
                     verts = np.array(component_shape.geometry.verts).reshape(-1, 3)
                     tam = float(verts[:, 0].max() - verts[:, 0].min())
-                    logging.debug(f'Component {component.id()} - {component.Name}: width = {tam:.3f} m')
+                    st.write(f'Component {component.id()} - {component.Name}: width = {tam:.3f} m')
                 else:
-                    logging.warning(f'Component {component.id()} - {component.Name}: no representation, defaulting to {dist} m')
+                    st.warning(f'Component {component.id()} - {component.Name}: no representation, defaulting to {dist} m')
                     tam = dist
 
                 if i == 0:
@@ -272,7 +298,7 @@ def run_processing(model_path, catalog_path, dist, dist_tramos, log_buffer, prog
 
                 matrix[:3, 3] = (x, y, 0)
                 geometry.edit_object_placement(model, product=component, matrix=matrix, is_si=True)
-                logging.info(f'Component {component.id()} - {component.Name} ({component_type.ElementType}) placed at x={x:.3f}')
+                st.write(f'Component {component.id()} - {component.Name} ({component_type.ElementType}) placed at x={x:.3f}')
 
                 depth = x - x_start - 2 * tam
                 x += tam + dist
@@ -298,11 +324,11 @@ def run_processing(model_path, catalog_path, dist, dist_tramos, log_buffer, prog
 def main():
     st.set_page_config(
         page_title="Unifilar3D",
-        page_icon="🏗️",
+        page_icon="💣",
         layout="wide",
     )
 
-    st.title("Unifilar3D — IFC Unifilar Representation Generator")
+    st.title("Unifilar3D — IFC Unifilar Representation Generator (26.04.28)")
 
     # ── Sidebar: configuration ──────────────────────────────────────────────
     with st.sidebar:
@@ -314,10 +340,9 @@ def main():
         st.divider()
 
         output_name  = st.text_input("Output filename", "model_clone.ifc")
+        attribute    = st.text_input("Attribute to check for gap (e.g. 'Name' or 'ElementType')", "ElementType")
         dist         = st.number_input("Component gap — dist (m)", value=DEFAULT_DIST,        min_value=0.0, step=0.05, format="%.3f")
         dist_tramos  = st.number_input("Tramo gap — dist_tramos (m)", value=DEFAULT_DIST_TRAMOS, min_value=0.0, step=0.01, format="%.3f")
-        verbose      = st.checkbox("Verbose logging")
-
         st.divider()
         execute = st.button("▶ Execute", type="primary", use_container_width=True)
 
@@ -340,17 +365,6 @@ def main():
         with open(catalog_path, "wb") as f:
             f.write(catalog_file.read())
 
-        # Configure logging to capture into a string buffer
-        log_buffer = io.StringIO()
-        log_handlers = [logging.StreamHandler(log_buffer)]
-        logging.basicConfig(
-            level=logging.DEBUG if verbose else logging.INFO,
-            format="%(asctime)s %(levelname)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-            handlers=log_handlers,
-            force=True,
-        )
-
         progress_bar = st.progress(0, text="Starting...")
         status_text  = st.empty()
         output_bytes = None
@@ -359,19 +373,14 @@ def main():
             with st.spinner("Processing IFC model…"):
                 output_bytes = run_processing(
                     model_path, catalog_path,
-                    dist, dist_tramos,
-                    log_buffer, progress_bar, status_text,
+                    attribute, dist, dist_tramos,
+                    progress_bar, status_text,
                 )
             progress_bar.progress(1.0, text="Done!")
             status_text.text("Processing complete.")
             st.success("Model processed successfully!")
         except Exception as exc:
             st.error(f"Processing failed: {exc}")
-            logging.exception("Unhandled exception during processing")
-
-        # Log output
-        with st.expander("Log output", expanded=verbose):
-            st.text(log_buffer.getvalue() or "(no log output)")
 
         # Download button
         if output_bytes is not None:
