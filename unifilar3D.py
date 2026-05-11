@@ -1,7 +1,7 @@
 import ifcopenshell
 from ifcopenshell import geom
 from ifcopenshell.util import representation, element, selector, placement, shape
-from ifcopenshell.api import type, geometry, context, style, material, spatial
+from ifcopenshell.api import type, geometry, context, style, material, spatial, nest
 import numpy as np
 import os
 import tempfile
@@ -15,6 +15,21 @@ DEFAULT_LOG_FILE      = "unifilar3D.log"
 DEFAULT_DIST          = 0.5
 DEFAULT_DIST_TRAMOS   = 0.1
 
+dists = {
+    "AnodeCollarSet-EndFitting" : 0.1,
+    "EndFitting-AnodeCollarSet": 0.1,
+}
+
+def update_predefined_types(model : ifcopenshell.file):
+    for entity in model.by_type('IfcElement'):
+        if getattr(entity, 'IsTypedBy', None):
+            entity_type = entity.IsTypedBy[0].RelatingType
+            if getattr(entity_type, 'ElementType', None) is not None:
+                object_type = entity_type.ElementType.replace("Type", "")
+                object_type = object_type.replace("Structure", "Segment")
+                entity.ObjectType = object_type
+                entity.PredefinedType = None
+                st.write(f'Updated predefined type for {entity.id()} - {entity.Name} to {entity.ObjectType}')
 
 def clone_entity(elements : list, model : ifcopenshell.file, sub_context : ifcopenshell.entity_instance) -> list:
     """
@@ -196,7 +211,29 @@ def create_pipe(model : ifcopenshell.file, tramo : ifcopenshell.entity_instance,
     else:
         return None
 
+def get_connected(entity : ifcopenshell.entity_instance) -> list:
+    """
+    Get the connected elements of the given entity.
+    """
+    connected_elements = [
+        rel.RelatingElement
+        for rel in getattr(entity, 'ConnectedFrom', [])
+        if hasattr(rel, 'RelatingElement') and rel.RelatingElement.ObjectType != "EndFitting"
+    ]
+    return connected_elements
 
+def get_component_length(component : ifcopenshell.entity_instance) -> float:
+    """
+    Get the length of the given component from its representation.
+    """
+    if component.Representation is not None:
+        component_shape = geom.create_shape(geom.settings(), component)
+        verts = np.array(component_shape.geometry.verts).reshape(-1, 3)
+        length = float(verts[:, 0].max() - verts[:, 0].min())
+        return length
+    else:
+        return None
+       
 def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progress_bar, status_text):
     """Run the full IFC unifilar processing pipeline."""
 
@@ -232,14 +269,18 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
         else:
             st.write(f'Type {type_target.Name} not found in catalog!')
 
-    # --- Aggregations ---
-    st.markdown(':green[Initiating processing of aggregate initial placements...]')
-    subsea_pipeline = list(selector.filter_elements(model, "IfcBuilding, ObjectType=SubseaPipeline"))[0]
-    pipes = selector.filter_elements(model, "IfcPipeSegment")
-    for pipe in pipes:
-        if pipe not in element.get_contained(subsea_pipeline):
-            st.write(f'Assigning #{pipe.id()} - {pipe.Name} to SubseaPipeline...')
-            spatial.assign_container(model, products=[pipe], relating_structure=subsea_pipeline)
+    # --- update predefined types (after type.assign_type to avoid being reset) ----
+    st.markdown(':green[Updating predefined types...]')
+    update_predefined_types(model)
+
+    # --- Pipe Aggregations ---
+    # st.markdown(':green[Initiating processing of aggregate initial placements...]')
+    # subsea_pipeline = list(selector.filter_elements(model, "IfcBuilding, ObjectType=SubseaPipeline"))[0]
+    # pipes = selector.filter_elements(model, "IfcPipeSegment")
+    # for pipe in pipes:
+    #     if pipe not in element.get_contained(subsea_pipeline) and pipe.ObjectType == 'FlexiblePipeSegment':
+    #         st.write(f'Assigning #{pipe.id()} - {pipe.Name} to SubseaPipeline...')
+    #         spatial.assign_container(model, products=[pipe], relating_structure=subsea_pipeline)
 
     
     # --- Buildings / Tramos ---
@@ -260,51 +301,116 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
         x_start = 0
         y = 0
 
-        for tramo in element.get_contained(building):
+        ###########################################
+        aggregations = element.get_contained(building)
+        tramos = element.get_components(aggregations[0])
+        ###########################################
+
+        for tramo in tramos:
             st.write(f'Processing Tramo #{tramo.id()} - {tramo.Name}...')
-            components = element.get_components(tramo)
+            try:
+                components = element.get_components(tramo)
+            except Exception as e:
+                st.error(f'Error processing Tramo #{tramo.id()} - {tramo.Name}: {e}')
+                continue
+            
+            # initialize variables for tramo processing
             n = len(components)
-            x_start = x
+            x_start = x 
             first_tam = 0
             depth = 0
-            st.write(f'Number of components in Tramo #{tramo.id()} - {tramo.Name}: {n}')
             tam = 0
+            old_component = ''
+            pullings = []
+
+            st.write(f'Number of components in Tramo #{tramo.id()} - {tramo.Name}: {n}')
+            # if no components, create a pipe with tramo gap length and continue to next tramo
             if len(components) == 0:
                 st.warning(f'Tramo {tramo.id()} - {tramo.Name} has no components, defaulting to tramo gap {dist_tramos} m')
                 x += dist_tramos
                 continue
+            
+            # for each component in the tramo, place it with the given gap and calculate the depth of the pipe representation based on the component length and gap, then create the pipe representation for the tramo with the calculated depth
             for i, component in enumerate(components):                
                 st.write(f'Processing Component #{component.id()} - {component.Name}...')
                 component_type = element.get_type(component)
 
-                if component.Representation is not None:
-                    component_shape = geom.create_shape(settings, component)
-                    verts = np.array(component_shape.geometry.verts).reshape(-1, 3)
-                    tam = float(verts[:, 0].max() - verts[:, 0].min())
-                    st.write(f'Component {component.id()} - {component.Name}: width = {tam:.3f} m')
+                if f'{old_component}-{getattr(component, "ObjectType", None)}' in dists:
+                    dist_component = dists[f'{old_component}-{getattr(component, "ObjectType", None)}']  
+                    st.write(f'Component {component.id()} - {component.Name} has specific gap defined for transition from {old_component} to {getattr(component, "ObjectType", "Unknown")}, using dist={dist_component} m')                  
                 else:
-                    st.warning(f'Component {component.id()} - {component.Name}: no representation, defaulting to {dist} m')
-                    tam = dist
+                    dist_component = dist
+                    st.write(f'Component {component.id()} - {component.Name} has no specific gap defined for its type {getattr(component, "ObjectType", "Unknown")}, using default dist={dist_component} m')
+                
+                # get component length from geometry, if not possible, use tramo gap as default
+                tam = get_component_length(component)
+                if tam is None:
+                    tam = dist_component
 
                 if i == 0:
                     first_tam = tam
+                else:
+                    x += dist_component
+                
+                if getattr(component, 'ObjectType', None) == 'PipePullingHead':
+                    pullings.append(component)
+                    continue
+                # if getattr(component, 'ObjectType', None) == 'PipePullingHead':
+                #     y = -dist
+                #     tam = 0
+                # else:
+                #     y = 0
 
-                y = -dist if component_type.ElementType == 'PipePullingHeadType' else 0
+                
 
                 matrix = np.eye(4)
                 if i + 1 > n / 2:
                     matrix = placement.rotation(180, "Z") @ matrix
                     x += tam
-
                 matrix[:3, 3] = (x, y, 0)
+
                 geometry.edit_object_placement(model, product=component, matrix=matrix, is_si=True)
-                st.write(f'Component {component.id()} - {component.Name} ({component_type.ElementType}) placed at x={x:.3f}')
+                st.write(f':blue[Component {component.id()} - {component.Name} ({getattr(component, "ObjectType", "Unknown")}) placed at x={x:.3f}]')
 
+                # process subcomponents if exist (e.g. accessories f or fittings with ports)
+                # subcomponents = get_connected(component)
+                # if len(subcomponents) > 0:
+                #     st.write(f'Component {component.id()} - {component.Name} has {len(subcomponents)} subcomponents, processing placements...')
+                #     for sub in subcomponents:
+                #         st.write(f'Processing Subcomponent #{sub.id()} - {sub.Name}...')
+                #         # sub_matrix = np.eye(4)
+                #         # sub_matrix[:3, 3] = (x, y - dist, 0)
+                #         # geometry.edit_object_placement(model, product=sub, matrix=sub_matrix, is_si=True)                        
+                #         nest.assign_object(model, related_objects=[sub], relating_object=tramo)
+                #         st.write(f':cyan[Subcomponent {sub.id()} - {sub.Name} placed at x={x:.3f}]')
+                # else:
+                #     st.write(f'Component {component.id()} - {component.Name} has no subcomponents.')
+                
                 depth = x - x_start - 2 * tam
-                x += tam + dist
+                #x += tam + dist
+                old_x = x
+                if i + 1 <= n / 2:
+                    x += tam
+                old_component = component.ObjectType
 
-            x += dist_tramos - (tam + dist)
-            create_pipe(model, tramo, (x_start + first_tam, y), depth)
+            x += dist_tramos # - tam
+            create_pipe(model, tramo, (x_start + first_tam, 0), depth)
+
+            # place pullings at the start and end of the tramo if exist
+            if len(pullings) > 0:
+                start_pulling = pullings[0]
+                matrix = np.eye(4)
+                matrix[:3, 3] = (x_start+first_tam, -dist , 0)
+                geometry.edit_object_placement(model, product=start_pulling, matrix=matrix, is_si=True)
+                st.write(f':magenta[Pulling {start_pulling.id()} - {start_pulling.Name} placed at x={x_start + first_tam:.3f}]')
+            
+            if len(pullings) > 1:
+                end_pulling = pullings[1]
+                matrix = np.eye(4)
+                matrix = placement.rotation(180, "Z") @ matrix
+                matrix[:3, 3] = (x_start + first_tam + depth, -dist , 0)
+                geometry.edit_object_placement(model, product=end_pulling, matrix=matrix, is_si=True)
+                st.write(f':magenta[Pulling {end_pulling.id()} - {end_pulling.Name} placed at x={x_start + first_tam + depth:.3f}]')
 
     # Write output to a bytes buffer via a temp file
     with tempfile.NamedTemporaryFile(suffix=".ifc", delete=False) as tmp_out:
@@ -328,7 +434,13 @@ def main():
         layout="wide",
     )
 
-    st.title("Unifilar3D — IFC Unifilar Representation Generator (26.04.28)")
+    st.title("Unifilar3D — IFC Unifilar Representation Generator (26.05.03)")
+
+    # ── Session state ───────────────────────────────────────────────────────
+    if "output_bytes" not in st.session_state:
+        st.session_state.output_bytes = None
+    if "output_name" not in st.session_state:
+        st.session_state.output_name = "model_clone.ifc"
 
     # ── Sidebar: configuration ──────────────────────────────────────────────
     with st.sidebar:
@@ -345,51 +457,71 @@ def main():
         dist_tramos  = st.number_input("Tramo gap — dist_tramos (m)", value=DEFAULT_DIST_TRAMOS, min_value=0.0, step=0.01, format="%.3f")
         st.divider()
         execute = st.button("▶ Execute", type="primary", use_container_width=True)
+        if st.session_state.output_bytes is not None:
+            if st.button("🗑 Limpar mensagens", use_container_width=True):
+                st.session_state.output_bytes = None
+                st.session_state.output_name = "model_clone.ifc"
+                st.rerun()
 
     # ── Main area ───────────────────────────────────────────────────────────
     if not execute:
-        st.info("Upload the input model and catalog in the sidebar, adjust parameters, then click **Execute**.")
+        if st.session_state.output_bytes is None:
+            st.info("Upload the input model and catalog in the sidebar, adjust parameters, then click **Execute**.")
+        else:
+            st.download_button(
+                label="⬇ Download output IFC",
+                data=st.session_state.output_bytes,
+                file_name=st.session_state.output_name,
+                mime="application/octet-stream",
+            )
         return
 
     if model_file is None or catalog_file is None:
         st.error("Please upload both the **Input Model** and the **IFC Catalog** before executing.")
         return
 
-    # Save uploaded files to a temporary directory
-    with tempfile.TemporaryDirectory() as tmpdir:
-        model_path   = os.path.join(tmpdir, model_file.name)
-        catalog_path = os.path.join(tmpdir, catalog_file.name)
+    # Download button placeholder at the top
+    download_placeholder = st.empty()
 
-        with open(model_path, "wb") as f:
-            f.write(model_file.read())
-        with open(catalog_path, "wb") as f:
-            f.write(catalog_file.read())
+    output_bytes = None
 
-        progress_bar = st.progress(0, text="Starting...")
-        status_text  = st.empty()
-        output_bytes = None
+    # Messages / progress container below
+    with st.container(border=True):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            model_path   = os.path.join(tmpdir, model_file.name)
+            catalog_path = os.path.join(tmpdir, catalog_file.name)
 
-        try:
-            with st.spinner("Processing IFC model…"):
-                output_bytes = run_processing(
-                    model_path, catalog_path,
-                    attribute, dist, dist_tramos,
-                    progress_bar, status_text,
-                )
-            progress_bar.progress(1.0, text="Done!")
-            status_text.text("Processing complete.")
-            st.success("Model processed successfully!")
-        except Exception as exc:
-            st.error(f"Processing failed: {exc}")
+            with open(model_path, "wb") as f:
+                f.write(model_file.read())
+            with open(catalog_path, "wb") as f:
+                f.write(catalog_file.read())
 
-        # Download button
-        if output_bytes is not None:
-            st.download_button(
-                label="⬇ Download output IFC",
-                data=output_bytes,
-                file_name=output_name,
-                mime="application/octet-stream",
-            )
+            progress_bar = st.progress(0, text="Starting...")
+            status_text  = st.empty()
+
+            try:
+                with st.spinner("Processing IFC model…"):
+                    output_bytes = run_processing(
+                        model_path, catalog_path,
+                        attribute, dist, dist_tramos,
+                        progress_bar, status_text,
+                    )
+                progress_bar.progress(1.0, text="Done!")
+                status_text.text("Processing complete.")
+                st.success("Model processed successfully!")
+            except Exception as exc:
+                st.error(f"Processing failed: {exc}")
+
+    # Populate download button at the top once processing is done
+    if output_bytes is not None:
+        st.session_state.output_bytes = output_bytes
+        st.session_state.output_name = output_name
+        download_placeholder.download_button(
+            label="⬇ Download output IFC",
+            data=output_bytes,
+            file_name=output_name,
+            mime="application/octet-stream",
+        )
 
 
 if __name__ == "__main__":
