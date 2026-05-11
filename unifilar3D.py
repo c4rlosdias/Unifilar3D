@@ -285,15 +285,17 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
     
     # --- Buildings / Tramos ---
     st.markdown(':green[Initiating processing tramos of initial placements...]')
-    buildings = model.by_type('IfcBuilding')
+    #buildings = model.by_type('IfcBuilding')
+    buildings = model.by_type('IfcSite')
     total_buildings = len(buildings)
 
     for b_idx, building in enumerate(buildings):
         status_text.text(f"Processing building {b_idx + 1}/{total_buildings}: {building.Name}")
         progress_bar.progress((b_idx + 1) / total_buildings if total_buildings else 1.0, text="Processing buildings...")
 
-        if building.ObjectType != 'SubseaPipeline':
-            continue
+        # if building.ObjectType != 'SubseaPipeline':
+        #     st.write(f'Skipping Building {building.id()} - {building.Name} with ObjectType={building.ObjectType} (not SubseaPipeline)')
+        #     continue
 
         st.write(f'Processing Building {building.id()} - {building.Name}...')
 
@@ -304,6 +306,7 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
         ###########################################
         aggregations = element.get_contained(building)
         tramos = element.get_components(aggregations[0])
+        #tramos = element.get_components(building)
         ###########################################
 
         for tramo in tramos:
@@ -434,7 +437,7 @@ def main():
         layout="wide",
     )
 
-    st.title("Unifilar3D — IFC Unifilar Representation Generator (26.05.03)")
+    st.title("Unifilar3D — IFC Unifilar Representation Generator (26.05.11)")
 
     # ── Session state ───────────────────────────────────────────────────────
     if "output_bytes" not in st.session_state:
