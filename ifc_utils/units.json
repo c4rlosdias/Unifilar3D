@@ -1,0 +1,970 @@
+{
+    "m": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "METRE"
+    },
+    "mm": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "METRE",
+        "prefix": "MILLI"
+    },
+    "cm": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "METRE",
+        "prefix": "CENTI"
+    },
+    "km": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "METRE",
+        "prefix": "KILO"
+    },
+    "m²": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcAreaMeasure",
+        "ifc_value": "SQUARE_METRE"
+    },
+    "mm²": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcAreaMeasure",
+        "ifc_value": "SQUARE_METRE",
+        "prefix": "MILLI"
+    },
+    "cm²": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcAreaMeasure",
+        "ifc_value": "SQUARE_METRE",
+        "prefix": "CENTI"
+    },
+    "m³": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "CUBIC_METRE"
+    },
+    "mm³": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "CUBIC_METRE",
+        "prefix": "MILLI"
+    },
+    "cm³": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "CUBIC_METRE",
+        "prefix": "CENTI"
+    },
+    "L": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "litre"
+    },
+    "m⁴": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcMomentOfInertiaMeasure",
+        "ifc_value": "METRE_TO_FOURTH_POWER",
+        "compose": {
+            "m": 4
+        }
+    },
+    "kg": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "GRAM",
+        "prefix": "KILO"
+    },
+    "g": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "GRAM"
+    },
+    "mg": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "GRAM",
+        "prefix": "MILLI"
+    },
+    "t": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "tonne"
+    },
+    "s": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcTimeMeasure",
+        "ifc_value": "SECOND"
+    },
+    "ms": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcTimeMeasure",
+        "ifc_value": "SECOND",
+        "prefix": "MILLI"
+    },
+    "min": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcTimeMeasure",
+        "ifc_value": "minute"
+    },
+    "h": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcTimeMeasure",
+        "ifc_value": "hour"
+    },
+    "K": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcThermodynamicTemperatureMeasure",
+        "ifc_value": "KELVIN"
+    },
+    "°C": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcThermodynamicTemperatureMeasure",
+        "ifc_value": "degree Celsius"
+    },
+    "°F": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcThermodynamicTemperatureMeasure",
+        "ifc_value": "degree Fahrenheit"
+    },
+    "A": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCurrentMeasure",
+        "ifc_value": "AMPERE"
+    },
+    "mA": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCurrentMeasure",
+        "ifc_value": "AMPERE",
+        "prefix": "MILLI"
+    },
+    "mol": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcAmountOfSubstanceMeasure",
+        "ifc_value": "MOLE"
+    },
+    "cd": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLuminousIntensityMeasure",
+        "ifc_value": "CANDELA"
+    },
+    "rad": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPlaneAngleMeasure",
+        "ifc_value": "RADIAN"
+    },
+    "degree": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPlaneAngleMeasure",
+        "ifc_value": "degree"
+    },
+    "°": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPlaneAngleMeasure",
+        "ifc_value": "degree"
+    },
+    "sr": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcSolidAngleMeasure",
+        "ifc_value": "STERADIAN"
+    },
+    "N": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "NEWTON"
+    },
+    "kN": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "NEWTON",
+        "prefix": "KILO"
+    },
+    "MN": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "NEWTON",
+        "prefix": "MEGA"
+    },
+    "kgf": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "kilogram-force"
+    },
+    "lbf": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "pound-force"
+    },
+    "Pa": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "PASCAL"
+    },
+    "kPa": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "PASCAL",
+        "prefix": "KILO"
+    },
+    "MPa": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "PASCAL",
+        "prefix": "MEGA"
+    },
+    "GPa": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "PASCAL",
+        "prefix": "GIGA"
+    },
+    "bar": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "bar"
+    },
+    "psi": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "psi"
+    },
+    "atm": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "ifc_value": "atmosphere"
+    },
+    "J": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "JOULE"
+    },
+    "kJ": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "JOULE",
+        "prefix": "KILO"
+    },
+    "MJ": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "JOULE",
+        "prefix": "MEGA"
+    },
+    "cal": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "calorie"
+    },
+    "kcal": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "kilocalorie"
+    },
+    "Wh": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "watt-hour"
+    },
+    "kWh": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "kilowatt-hour"
+    },
+    "W": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPowerMeasure",
+        "ifc_value": "WATT"
+    },
+    "mW": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPowerMeasure",
+        "ifc_value": "WATT",
+        "prefix": "MILLI"
+    },
+    "kW": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPowerMeasure",
+        "ifc_value": "WATT",
+        "prefix": "KILO"
+    },
+    "MW": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcPowerMeasure",
+        "ifc_value": "WATT",
+        "prefix": "MEGA"
+    },
+    "V": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricVoltageMeasure",
+        "ifc_value": "VOLT"
+    },
+    "mV": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricVoltageMeasure",
+        "ifc_value": "VOLT",
+        "prefix": "MILLI"
+    },
+    "kV": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricVoltageMeasure",
+        "ifc_value": "VOLT",
+        "prefix": "KILO"
+    },
+    "C": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricChargeMeasure",
+        "ifc_value": "COULOMB"
+    },
+    "F": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCapacitanceMeasure",
+        "ifc_value": "FARAD"
+    },
+    "µF": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCapacitanceMeasure",
+        "ifc_value": "FARAD",
+        "prefix": "MICRO"
+    },
+    "nF": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCapacitanceMeasure",
+        "ifc_value": "FARAD",
+        "prefix": "NANO"
+    },
+    "pF": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricCapacitanceMeasure",
+        "ifc_value": "FARAD",
+        "prefix": "PICO"
+    },
+    "Ω": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricResistanceMeasure",
+        "ifc_value": "OHM"
+    },
+    "kΩ": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricResistanceMeasure",
+        "ifc_value": "OHM",
+        "prefix": "KILO"
+    },
+    "MΩ": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricResistanceMeasure",
+        "ifc_value": "OHM",
+        "prefix": "MEGA"
+    },
+    "S": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcElectricConductanceMeasure",
+        "ifc_value": "SIEMENS"
+    },
+    "Wb": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcMagneticFluxMeasure",
+        "ifc_value": "WEBER"
+    },
+    "T": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcMagneticFluxDensityMeasure",
+        "ifc_value": "TESLA"
+    },
+    "H": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcInductanceMeasure",
+        "ifc_value": "HENRY"
+    },
+    "mH": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcInductanceMeasure",
+        "ifc_value": "HENRY",
+        "prefix": "MILLI"
+    },
+    "µH": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcInductanceMeasure",
+        "ifc_value": "HENRY",
+        "prefix": "MICRO"
+    },
+    "Hz": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcFrequencyMeasure",
+        "ifc_value": "HERTZ"
+    },
+    "kHz": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcFrequencyMeasure",
+        "ifc_value": "HERTZ",
+        "prefix": "KILO"
+    },
+    "MHz": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcFrequencyMeasure",
+        "ifc_value": "HERTZ",
+        "prefix": "MEGA"
+    },
+    "GHz": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcFrequencyMeasure",
+        "ifc_value": "HERTZ",
+        "prefix": "GIGA"
+    },
+    "lm": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLuminousFluxMeasure",
+        "ifc_value": "LUMEN"
+    },
+    "lx": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcIlluminanceMeasure",
+        "ifc_value": "LUX"
+    },
+    "Bq": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcRadioActivityMeasure",
+        "ifc_value": "BECQUEREL"
+    },
+    "Gy": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcAbsorbedDoseMeasure",
+        "ifc_value": "GRAY"
+    },
+    "Sv": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcDoseEquivalentMeasure",
+        "ifc_value": "SIEVERT"
+    },
+    "kat": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "ifc_value": "KATAL"
+    },
+    "%": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcPositiveRatioMeasure",
+        "ifc_value": "percent"
+    },
+    "‰": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcRatioMeasure",
+        "ifc_value": "per mille"
+    },
+    "ppm": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcRatioMeasure",
+        "ifc_value": "parts per million"
+    },
+    "W/mK": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcThermalConductivityMeasure",
+        "compose": {
+            "W": 1,
+            "m": -1,
+            "K": -1
+        }
+    },
+    "W/(m²K)": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcThermalTransmittanceMeasure",
+        "compose": {
+            "W": 1,
+            "m": -2,
+            "K": -1
+        }
+    },
+    "m²K/W": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcThermalResistanceMeasure",
+        "compose": {
+            "m": 2,
+            "K": 1,
+            "W": -1
+        }
+    },
+    "J/(kg.K)": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcSpecificHeatCapacityMeasure",
+        "compose": {
+            "J": 1,
+            "kg": -1,
+            "K": -1
+        }
+    },
+    "J/(m³K)": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcVolumetricHeatCapacityMeasure",
+        "compose": {
+            "J": 1,
+            "m": -3,
+            "K": -1
+        }
+    },
+    "N/m³": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcModulusOfSubgradeReactionMeasure",
+        "compose": {
+            "N": 1,
+            "m": -3
+        }
+    },
+    "Nm²/rad": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcModulusOfRotationalSubgradeReactionMeasure",
+        "compose": {
+            "N": 1,
+            "m": 2,
+            "rad": -1
+        }
+    },
+    "kg/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcMassPerLengthMeasure",
+        "compose": {
+            "kg": 1,
+            "m": -1
+        }
+    },
+    "kg/m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcAreaDensityMeasure",
+        "compose": {
+            "kg": 1,
+            "m": -2
+        }
+    },
+    "kg/m³": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcMassDensityMeasure",
+        "compose": {
+            "kg": 1,
+            "m": -3
+        }
+    },
+    "m/s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLinearVelocityMeasure",
+        "compose": {
+            "m": 1,
+            "s": -1
+        }
+    },
+    "km/h": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcLinearVelocityMeasure",
+        "ifc_value": "kilometre per hour"
+    },
+    "m/s²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcAccelerationMeasure",
+        "compose": {
+            "m": 1,
+            "s": -2
+        }
+    },
+    "rad/s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcAngularVelocityMeasure",
+        "compose": {
+            "rad": 1,
+            "s": -1
+        }
+    },
+    "rad/s²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcRotationalFrequencyMeasure",
+        "compose": {
+            "rad": 1,
+            "s": -2
+        }
+    },
+    "m³/s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcVolumetricFlowRateMeasure",
+        "compose": {
+            "m": 3,
+            "s": -1
+        }
+    },
+    "L/s": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumetricFlowRateMeasure",
+        "ifc_value": "litre per second"
+    },
+    "L/min": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumetricFlowRateMeasure",
+        "ifc_value": "litre per minute"
+    },
+    "kg/s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcMassFlowRateMeasure",
+        "compose": {
+            "kg": 1,
+            "s": -1
+        }
+    },
+    "m²/s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcKinematicViscosityMeasure",
+        "compose": {
+            "m": 2,
+            "s": -1
+        }
+    },
+    "Pa.s": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcDynamicViscosityMeasure",
+        "compose": {
+            "Pa": 1,
+            "s": 1
+        }
+    },
+    "N/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLinearStiffnessMeasure",
+        "compose": {
+            "N": 1,
+            "m": -1
+        }
+    },
+    "N/mm": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLinearStiffnessMeasure",
+        "compose": {
+            "N": 1,
+            "mm": -1
+        }
+    },
+    "Nm": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcTorqueMeasure",
+        "compose": {
+            "N": 1,
+            "m": 1
+        }
+    },
+    "kNm": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcTorqueMeasure",
+        "compose": {
+            "kN": 1,
+            "m": 1
+        }
+    },
+    "Nm/rad": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcRotationalStiffnessMeasure",
+        "compose": {
+            "N": 1,
+            "m": 1,
+            "rad": -1
+        }
+    },
+    "1/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcCurvatureMeasure",
+        "compose": {
+            "m": -1
+        }
+    },
+    "1/K": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcThermalExpansionCoefficientMeasure",
+        "compose": {
+            "K": -1
+        }
+    },
+    "W/m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcHeatFluxDensityMeasure",
+        "compose": {
+            "W": 1,
+            "m": -2
+        }
+    },
+    "m³/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcSectionModulusMeasure",
+        "compose": {
+            "m": 2
+        }
+    },
+    "N/m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcPressureMeasure",
+        "compose": {
+            "N": 1,
+            "m": -2
+        }
+    },
+    "Nm²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcWarpingConstantMeasure",
+        "compose": {
+            "N": 1,
+            "m": 2
+        }
+    },
+    "Pa.√m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "compose": {
+            "Pa": 1,
+            "m": 0.5
+        }
+    },
+    "µm³/m³": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "compose": {
+            "µm": 3,
+            "m": -3
+        }
+    },
+    "mol/(m.s.Pa)": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "compose": {
+            "mol": 1,
+            "m": -1,
+            "s": -1,
+            "Pa": -1
+        }
+    },
+    "mol/(m³.Pa)": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "compose": {
+            "mol": 1,
+            "m": -3,
+            "Pa": -1
+        }
+    },
+    "A/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcMagneticFieldStrengthMeasure",
+        "compose": {
+            "A": 1,
+            "m": -1
+        }
+    },
+    "A/m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcElectricCurrentDensityMeasure",
+        "compose": {
+            "A": 1,
+            "m": -2
+        }
+    },
+    "V/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcElectricFieldStrengthMeasure",
+        "compose": {
+            "V": 1,
+            "m": -1
+        }
+    },
+    "lm/W": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLuminousEfficacyMeasure",
+        "compose": {
+            "lm": 1,
+            "W": -1
+        }
+    },
+    "cd/m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLuminanceMeasure",
+        "compose": {
+            "cd": 1,
+            "m": -2
+        }
+    },
+    "dB": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcSoundPowerLevelMeasure",
+        "ifc_value": "decibel"
+    },
+    "dB(A)": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcSoundPowerLevelMeasure",
+        "ifc_value": "decibel A-weighted"
+    },
+    "pH": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcPHMeasure",
+        "ifc_value": "pH"
+    },
+    "in": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "inch"
+    },
+    "ft": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "foot"
+    },
+    "yd": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "yard"
+    },
+    "mi": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "mile"
+    },
+    "in²": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcAreaMeasure",
+        "ifc_value": "square inch"
+    },
+    "ft²": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcAreaMeasure",
+        "ifc_value": "square foot"
+    },
+    "in³": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "cubic inch"
+    },
+    "ft³": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "cubic foot"
+    },
+    "gal": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "gallon"
+    },
+    "lb": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "pound"
+    },
+    "oz": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcMassMeasure",
+        "ifc_value": "ounce"
+    },
+    "BTU": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcEnergyMeasure",
+        "ifc_value": "BTU"
+    },
+    "hp": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcPowerMeasure",
+        "ifc_value": "horsepower"
+    },
+    "rpm": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcRotationalFrequencyMeasure",
+        "ifc_value": "revolutions per minute"
+    },
+    "µm": {
+        "ifc_class": "IfcSIUnit",
+        "ifc_attribute": "IfcLengthMeasure",
+        "ifc_value": "METRE",
+        "prefix": "MICRO"
+    },
+    "mL": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcVolumeMeasure",
+        "ifc_value": "millilitre"
+    },
+    "yr": {
+        "ifc_class": "IfcConversionBasedUnit",
+        "ifc_attribute": "IfcTimeMeasure",
+        "ifc_value": "year"
+    },
+    "tf": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcForceMeasure",
+        "ifc_value": "tonne-force"
+    },
+    "N·m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcTorqueMeasure",
+        "compose": { "N": 1, "m": 1 }
+    },
+    "kN·m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcTorqueMeasure",
+        "compose": { "kN": 1, "m": 1 }
+    },
+    "kN/m": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcLinearStiffnessMeasure",
+        "compose": { "kN": 1, "m": -1 }
+    },
+    "kgf/m": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcLinearStiffnessMeasure",
+        "ifc_value": "kgf/m"
+    },
+    "kN·m²": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcWarpingConstantMeasure",
+        "compose": { "kN": 1, "m": 2 }
+    },
+    "kN·m/°": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcRotationalStiffnessMeasure",
+        "ifc_value": "kN.m/deg"
+    },
+    "m³/h": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcVolumetricFlowRateMeasure",
+        "ifc_value": "cubic metre per hour"
+    },
+    "mg/L": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcMassDensityMeasure",
+        "ifc_value": "mg/L"
+    },
+    "mgKOH/g": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "ifc_value": "mgKOH/g"
+    },
+    "dB/km": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "ifc_value": "dB/km"
+    },
+    "% mol": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcPositiveRatioMeasure",
+        "ifc_value": "mole percent"
+    },
+    "ppm vol": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcRatioMeasure",
+        "ifc_value": "ppm volume"
+    },
+    "TPI": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "ifc_value": "threads per inch"
+    },
+    "L-PER-M": {
+        "ifc_class": "IfcContextDependentUnit",
+        "ifc_attribute": "IfcNumericMeasure",
+        "ifc_value": "L/m"
+    },
+    "M3-PER-M": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcSectionModulusMeasure",
+        "compose": { "m": 2 }
+    },
+    "N-M2-PER-RAD": {
+        "ifc_class": "IfcDerivedUnit",
+        "ifc_attribute": "IfcModulusOfRotationalSubgradeReactionMeasure",
+        "compose": { "N": 1, "m": 2, "rad": -1 }
+    }
+}

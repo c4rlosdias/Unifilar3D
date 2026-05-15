@@ -7,6 +7,10 @@ import os
 import tempfile
 from pathlib import Path
 import streamlit as st
+try:
+    from .ifc_utils.unit_manager import UnitManager
+except ImportError:
+    from ifc_utils.unit_manager import UnitManager
 
 DEFAULT_MODEL_INPUT   = "./input/model.ifc"
 DEFAULT_CATALOG_INPUT = "./input/catalog.ifc"
@@ -145,7 +149,6 @@ def make_new_material(model : ifcopenshell.file, material_type : ifcopenshell.en
     else:
         st.error(f'Material {material_type.Name} : material profile not found in catalog!')
         return None
-        
     
 def add_catalog_representation(type_target : ifcopenshell.entity_instance, model : ifcopenshell.file, catalog_input : str, attribute : str) -> list:
     """
@@ -254,7 +257,7 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
     total_types = len(types)
     st.write('Initiating processing of types representation map from catalog...')
 
-    # Iterate over types and add catalog representation map, then update placements of related instances
+    # --- Iterate over types and add catalog representation map, then update placements of related instances ---
     for i, type_target in enumerate(types):
         status_text.text(f"Processing type {i + 1}/{total_types}: {type_target.Name}")
         progress_bar.progress((i + 1) / total_types if total_types else 1.0, text="Processing types...")
@@ -302,7 +305,7 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
         x = 0
         x_start = 0
         y = 0
-
+        
         ###########################################
         aggregations = element.get_contained(building)
         tramos = element.get_components(aggregations[0])
@@ -405,7 +408,7 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
                 matrix = np.eye(4)
                 matrix[:3, 3] = (x_start+first_tam, -dist , 0)
                 geometry.edit_object_placement(model, product=start_pulling, matrix=matrix, is_si=True)
-                st.write(f':magenta[Pulling {start_pulling.id()} - {start_pulling.Name} placed at x={x_start + first_tam:.3f}]')
+                st.write(f':blue[Pulling {start_pulling.id()} - {start_pulling.Name} placed at x={x_start + first_tam:.3f}]')
             
             if len(pullings) > 1:
                 end_pulling = pullings[1]
@@ -413,9 +416,29 @@ def run_processing(model_path, catalog_path, attribute, dist, dist_tramos, progr
                 matrix = placement.rotation(180, "Z") @ matrix
                 matrix[:3, 3] = (x_start + first_tam + depth, -dist , 0)
                 geometry.edit_object_placement(model, product=end_pulling, matrix=matrix, is_si=True)
-                st.write(f':magenta[Pulling {end_pulling.id()} - {end_pulling.Name} placed at x={x_start + first_tam + depth:.3f}]')
+                st.write(f':blue[Pulling {end_pulling.id()} - {end_pulling.Name} placed at x={x_start + first_tam + depth:.3f}]')
 
-    # Write output to a bytes buffer via a temp file
+    # --- fix units of properties based on catalog information and predefined mapping ---
+    st.markdown(':green[Fixing units of properties based on catalog information and predefined mapping...]')
+    
+    unit_manager = UnitManager()
+    prop_info = unit_manager.properties['properties_by_name']
+
+    properties = model.by_type('IfcProperty')
+    for prop in properties:
+        if prop.is_a("IfcPropertySingleValue") and not prop.Unit:
+            st.write(f'Processing Property #{prop.id()} - {prop.Name}...')
+            unit_info = prop_info[prop.Name] if prop.Name in prop_info else None
+            st.write(f'Unit info for Property {prop.Name}: {unit_info["unit"] if unit_info and "unit" in unit_info else "No unit info found"}')
+            if unit_info and 'unit' in unit_info:
+                unit = unit_manager.create_unit(model, unit_info['unit'])
+                st.write(f'Created unit :green[{unit}] for Property {prop.id()} - {prop.Name}')
+                prop.Unit = unit
+                st.write(f':orange[Unit {unit_info["unit"]} assigned to Property {prop.id()} - {prop.Name}]')
+            else:
+                st.write(f'No unit information found for Property {prop.id()} - {prop.Name}, skipping unit assignment.')
+    
+    # --- Write output to a bytes buffer via a temp file ---
     with tempfile.NamedTemporaryFile(suffix=".ifc", delete=False) as tmp_out:
         tmp_out_path = tmp_out.name
 
